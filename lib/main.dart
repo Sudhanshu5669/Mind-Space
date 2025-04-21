@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mind_space/Components/Bottom_nav_bar.dart';
 import 'package:mind_space/pages/addMood.dart';
 import 'package:mind_space/pages/home.dart';
 import 'package:mind_space/pages/login.dart';
@@ -61,6 +62,6 @@ class _AuthWrapperState extends State<AuthWrapper> {
         body: Center(child: CircularProgressIndicator()),
       );
     }
-    return isLoggedIn ? Home() : const LoginPage();
+    return isLoggedIn ? BottomNavBar() : const LoginPage();
   }
 }

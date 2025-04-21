@@ -81,7 +81,7 @@ class _HomeState extends State<Home> {
         },
       ),
       
-      
+      /*
       // BOTTOM NAVIGATION BAR START
       bottomNavigationBar: Container(
         color: Color.fromARGB(255, 14, 13, 13),
@@ -111,6 +111,8 @@ class _HomeState extends State<Home> {
           ),
         ),
       ),
+
+      */
       // BOTTOM NAVIGATION BAR END
 
 
