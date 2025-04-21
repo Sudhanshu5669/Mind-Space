@@ -46,7 +46,7 @@ class BottomNavBar extends StatelessWidget {
           ),
         ),
       ),
-      body: controller.pages[controller.index.value],
+      body: Obx(() => controller.pages[controller.index.value],)
     );
   }
 }
