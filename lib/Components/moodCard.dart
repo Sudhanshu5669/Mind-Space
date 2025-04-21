@@ -49,7 +49,7 @@ class Moodcard extends StatelessWidget {
                 children: [
                   Text("Mood: $index", style: TextStyle(color: Colors.orangeAccent)),
                   SizedBox(width: 200),
-                  Icon(Icons.delete, color: Colors.orangeAccent,)
+                  //Icon(Icons.delete, color: Colors.orangeAccent,)
                 ],
               ),
               SizedBox(height: 8),
