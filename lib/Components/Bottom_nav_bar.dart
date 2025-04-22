@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:mind_space/Controller/bottom_nav_bar_controller.dart';
-import 'package:mind_space/pages/home.dart';
+
 
 class BottomNavBar extends StatelessWidget {
   const BottomNavBar({super.key});

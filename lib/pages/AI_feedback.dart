@@ -1,7 +1,33 @@
 import 'package:flutter/material.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
-class AiFeedback extends StatelessWidget {
+class AiFeedback extends StatefulWidget {
   const AiFeedback({super.key});
+
+  @override
+  State<AiFeedback> createState() => _AiFeedbackState();
+}
+
+class _AiFeedbackState extends State<AiFeedback> {
+  List<dynamic> taskList = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    loadFeedback();
+  }
+
+  void loadFeedback() async {
+    final box = await Hive.openBox('feedStore');
+    setState(() {
+      taskList = box.get('taskList', defaultValue: []);
+      _isLoading = false;
+    });
+    
+    // Debug print to help diagnose issues
+    debugPrint('Loaded feedback taskList: $taskList');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -13,16 +39,14 @@ class AiFeedback extends StatelessWidget {
           style: TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.bold,
-          ),  
+          ),
         ),
         backgroundColor: Colors.black,
         elevation: 0,
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh, color: Colors.white),
-            onPressed: () {
-              // Refresh AI feedback - you'll implement this
-            },
+            onPressed: loadFeedback,
           ),
         ],
       ),
@@ -62,32 +86,82 @@ class AiFeedback extends StatelessWidget {
   }
   
   Widget _buildFeedbackList() {
-    // This is a placeholder. You'll replace this with actual data
-    // from your backend when you implement the functionality
-    return ListView(
+    if (_isLoading) {
+      return Center(
+        child: CircularProgressIndicator(
+          color: Colors.orangeAccent,
+        ),
+      );
+    }
+
+    if (taskList.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.sentiment_neutral,
+              size: 64,
+              color: Colors.grey.shade600,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              "No AI insights found",
+              style: TextStyle(
+                fontSize: 18,
+                color: Colors.grey.shade400,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              "Add some diary entries to see AI insights",
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey.shade500,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return ListView.builder(
       physics: const BouncingScrollPhysics(),
-      children: [
-        _buildFeedbackCard(
-          date: "April 21, 2025",
-          moodTitle: "Happy day",
-          aiMessage: "Placeholder for AI feedback. You'll replace this with actual feedback from your backend.",
-          moodColor: Colors.green,
-        ),
-        const SizedBox(height: 16),
-        _buildFeedbackCard(
-          date: "April 20, 2025",
-          moodTitle: "Feeling anxious",
-          aiMessage: "Placeholder for AI feedback. You'll replace this with actual feedback from your backend.",
-          moodColor: Colors.orange,
-        ),
-        const SizedBox(height: 16),
-        _buildFeedbackCard(
-          date: "April 19, 2025",
-          moodTitle: "Mixed feelings",
-          aiMessage: "Placeholder for AI feedback. You'll replace this with actual feedback from your backend.",
-          moodColor: Colors.purple,
-        ),
-      ],
+      itemCount: taskList.length,
+      itemBuilder: (context, index) {
+        final entry = taskList[index];
+        
+        // Debug print to help diagnose the structure
+        debugPrint('Entry $index: $entry');
+        
+        // Safely extract values, providing defaults if missing
+        final date = entry['date'] ?? 'No date';
+        final moodTitle = entry['moodTitle'] ?? 'Unknown mood';
+        final aiMessage = entry['aiMessage'] ?? 'No AI insights available';
+        
+        // Get color from stored integer value or default to grey
+        Color moodColor;
+        try {
+          if (entry['moodColor'] != null) {
+            moodColor = Color(entry['moodColor']);
+          } else {
+            moodColor = Colors.grey;
+          }
+        } catch (e) {
+          debugPrint('Error converting color: $e');
+          moodColor = Colors.grey;
+        }
+
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 16.0),
+          child: _buildFeedbackCard(
+            date: date,
+            moodTitle: moodTitle,
+            aiMessage: aiMessage,
+            moodColor: moodColor,
+          ),
+        );
+      },
     );
   }
   
@@ -197,7 +271,7 @@ class AiFeedback extends StatelessWidget {
               children: [
                 TextButton.icon(
                   onPressed: () {
-                    // View original entry - you'll implement this
+                    // View original entry - you'll implement this later
                   },
                   icon: const Icon(
                     Icons.visibility_outlined,

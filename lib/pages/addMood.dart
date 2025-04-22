@@ -51,6 +51,95 @@ class _AddmoodState extends State<Addmood> {
 
   final _moodBox = Hive.box('MoodStore');
 
+  dynamic calcRes(Map<String, dynamic> taskok) {
+  // Extract the values from the map
+  double anxiety = taskok["anxietyLevel"]?.toDouble() ?? 0.0;
+  double lowMood = taskok["lowMoodLevel"]?.toDouble() ?? 0.0;
+  double contentment = taskok["contentmentLevel"]?.toDouble() ?? 0.0;
+  double frustration = taskok["frustrationLevel"]?.toDouble() ?? 0.0;
+  double excitement = taskok["excitementLevel"]?.toDouble() ?? 0.0;
+
+  // Weights
+  double contentmentWeight = 0.6;
+  double excitementWeight = 0.4;
+
+  double anxietyWeight = 0.3;
+  double lowMoodWeight = 0.4;
+  double frustrationWeight = 0.3;
+
+  // Calculate mood score
+  double positive = (contentment * contentmentWeight) + (excitement * excitementWeight);
+  double negative = (anxiety * anxietyWeight) + (lowMood * lowMoodWeight) + (frustration * frustrationWeight);
+
+  double moodScore = positive - negative;
+  print(moodScore);
+  return moodScore;
+}
+
+
+
+  dynamic _getFeedback() async {
+    final String? token = await _secureStorage.getToken();
+    print(token);
+    var response = await http.get(
+      Uri.parse("http://192.168.227.240:3000/moodScore/feedback"),
+         headers: {
+           'Cookie': 'session=${token}',
+           'Content-Type': 'application/json',
+         },
+         
+ );
+
+      if(response.statusCode == 200){
+      final responseData = jsonDecode(response.body);
+      print(responseData);
+      return responseData;
+    } else if(response.statusCode == 401){
+      final responseData = jsonDecode(response.body);
+      return responseData;
+    }
+
+
+  }
+
+  dynamic getFeedback(taskok) async {
+    var response = await _getFeedback();
+    var box = await Hive.openBox('feedStore');
+
+    var calc = calcRes(taskok);
+
+    String str = "";
+    int color = 0;
+
+    if(calc >= 0 && calc < 3.5){
+      str = "Mixed feelings";
+      calc = 1;
+      color = Colors.deepPurple.toARGB32();
+    } else if (calc >= 3.5 && calc < 7){
+      str = "Neutral feelings";
+      calc = 2;
+      color = Colors.yellow.toARGB32();
+    } else{
+      str = "Feelings good";
+      calc = 3;
+      color = Colors.green.toARGB32();
+    }
+
+
+    List<dynamic> taskList = box.get('taskList', defaultValue: []);
+    DateTime now = DateTime.now();
+    String formattedDate = "${now.year}-${now.month}-${now.day}";
+    print("Response: $response");
+    Map<String, dynamic> task = {'date': formattedDate, 'moodTitle': str, 'aiMessage': response["feedback"], 'moodColor': color};
+    taskList.insert(0, task);
+    box.put('taskList', taskList);
+    print(task);
+  }
+
+
+
+
+
   dynamic _submitMood(mood, diary) async {
 
     var index = 0;
@@ -106,11 +195,11 @@ class _AddmoodState extends State<Addmood> {
     DateTime now = DateTime.now();
     String formattedDate = "${now.year}-${now.month}-${now.day}";
     Map<String, dynamic> task = {'index': mood, 'date': formattedDate, 'diary': diary, 'anxietyLevel': response["anxietyLevel"], 'lowMoodLevel': response["lowMoodLevel"],'contentmentLevel': response["contentmentLevel"], 'frustrationLevel': response["frustrationLevel"], 'excitementLevel': response["excitementLevel"]};
-    taskList.add(task);
+    taskList.insert(0, task);
     _moodBox.put('taskList', taskList);
     print(task);
 
-    
+    getFeedback(task);
   }
 
   final TextEditingController _noteController = TextEditingController();
