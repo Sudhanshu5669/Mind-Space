@@ -24,6 +24,7 @@ class MyApp extends StatelessWidget {
         '/loginpage': (context) => const LoginPage(),
         '/signup': (context) => const SignupNew(),
         '/home': (context) => Home(),
+        '/bottomnav': (context) => const BottomNavBar(),
       },
     );
   }
