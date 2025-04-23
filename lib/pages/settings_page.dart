@@ -1,5 +1,8 @@
-/*
 import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:mind_space/services/secure_storage_service.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -9,97 +12,47 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
-  bool _darkMode = true;
   bool _notifications = true;
+  String userName = "Loading...";
+  String userEmail = "Loading...";
+  Box? userBox;
+  final _secureStorage = SecureStorageService();
 
   @override
-  Widget build(BuildContext context) {
-    return ListView(
-      padding: EdgeInsets.all(16),
-      children: [
-        Text(
-          'Settings',
-          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
-        ),
-        SizedBox(height: 20),
-        Card(
-          color: Colors.grey.shade800,
-          child: ListTile(
-            title: Text('Dark Mode', style: TextStyle(color: Colors.white)),
-            trailing: Switch(
-              value: _darkMode,
-              onChanged: (value) {
-                setState(() {
-                  _darkMode = value;
-                });
-              },
-              activeColor: Colors.orangeAccent,
-            ),
-          ),
-        ),
-        Card(
-          color: Colors.grey.shade800,
-          child: ListTile(
-            title: Text('Notifications', style: TextStyle(color: Colors.white)),
-            trailing: Switch(
-              value: _notifications,
-              onChanged: (value) {
-                setState(() {
-                  _notifications = value;
-                });
-              },
-              activeColor: Colors.orangeAccent,
-            ),
-          ),
-        ),
-        Card(
-          color: Colors.grey.shade800,
-          child: ListTile(
-            title: Text('About', style: TextStyle(color: Colors.white)),
-            trailing: Icon(Icons.arrow_forward_ios, color: Colors.white),
-            onTap: () {
-              // Navigate to about page
-            },
-          ),
-        ),
-        Card(
-          color: Colors.grey.shade800,
-          child: ListTile(
-            title: Text('Help & Support', style: TextStyle(color: Colors.white)),
-            trailing: Icon(Icons.arrow_forward_ios, color: Colors.white),
-            onTap: () {
-              // Navigate to help page
-            },
-          ),
-        ),
-        SizedBox(height: 20),
-        ElevatedButton(
-          onPressed: () {
-            // Add logout functionality
-          },
-          child: Text('Log Out'),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.orangeAccent,
-            padding: EdgeInsets.symmetric(vertical: 15),
-          ),
-        ),
-      ],
-    );
+  void initState() {
+    super.initState();
+    _loadUserData();
   }
-}
-*/
 
-import 'package:flutter/material.dart';
+  Future<void> _loadUserData() async {
+    userBox = await Hive.openBox('user');
+    List<String> userDetails = userBox?.get('userDetail', defaultValue: ["John Doe", "john.doe@example.com"]);
+    setState(() {
+      userName = userDetails[0];
+      userEmail = userDetails[1];
+    });
+  }
 
-class SettingsPage extends StatefulWidget {
-  const SettingsPage({super.key});
+  void _launchInstagram() async {
+    final Uri instagramUrl = Uri.parse('https://www.instagram.com/sudhanshu.zen');
+    if (!await launchUrl(instagramUrl, mode: LaunchMode.externalApplication)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not open Instagram')),
+      );
+    }
+  }
 
-  @override
-  State<SettingsPage> createState() => _SettingsPageState();
-}
-
-class _SettingsPageState extends State<SettingsPage> {
-  bool _notifications = true;
+  void _logout() async {
+    // Clear the stored token
+    
+    
+    // Clear any user data if needed
+    // await userBox?.clear();
+    
+    // Navigate to login page
+    Navigator.of(context).pushNamedAndRemoveUntil('/loginpage', (route) => false);
+    await _secureStorage.deleteToken();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -160,33 +113,21 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
                 const SizedBox(height: 14),
 
-                // Security
-                _buildSettingsCard(
-                  icon: Icons.lock_rounded,
-                  iconColor: Colors.green,
-                  title: 'App Lock',
-                  subtitle: 'Secure your mood data',
-                  onTap: () {},
-                ),
-                const SizedBox(height: 14),
-
-                // User Data
-                _buildSettingsCard(
-                  icon: Icons.data_usage_rounded,
-                  iconColor: Colors.purple,
-                  title: 'Your Data',
-                  subtitle: 'View or export your data',
-                  onTap: () {},
-                ),
-                const SizedBox(height: 14),
-
-                // Help & Support
+                // Help & Support with Instagram link
                 _buildSettingsCard(
                   icon: Icons.support_agent_rounded,
                   iconColor: Colors.teal,
                   title: 'Help & Support',
-                  subtitle: 'Get assistance with the app',
-                  onTap: () {},
+                  subtitle: 'Connect with us on Instagram',
+                  trailing: IconButton(
+                    icon: Icon(
+                      Icons.open_in_new,
+                      color: Colors.orangeAccent,
+                      size: 20,
+                    ),
+                    onPressed: _launchInstagram,
+                  ),
+                  onTap: _launchInstagram,
                 ),
                 const SizedBox(height: 30),
 
@@ -198,6 +139,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   iconColor: Colors.amber,
                   title: 'About Mind Space',
                   subtitle: 'Version 1.0.0',
+                  trailing: SizedBox.shrink(), // Remove arrow by providing empty widget
                   onTap: () {},
                 ),
                 const SizedBox(height: 30),
@@ -215,9 +157,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                   width: double.infinity,
                   child: ElevatedButton.icon(
-                    onPressed: () {
-                      // Add logout functionality
-                    },
+                    onPressed: _logout,
                     icon: const Icon(Icons.logout_rounded),
                     label: const Text(
                       'Log Out',
@@ -293,8 +233,8 @@ class _SettingsPageState extends State<SettingsPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'John Doe',
+                Text(
+                  userName,
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -303,7 +243,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'john.doe@example.com',
+                  userEmail,
                   style: TextStyle(
                     fontSize: 14,
                     color: Colors.grey.shade400,
@@ -312,13 +252,7 @@ class _SettingsPageState extends State<SettingsPage> {
               ],
             ),
           ),
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(
-              Icons.edit_outlined,
-              color: Colors.orangeAccent,
-            ),
-          ),
+          
         ],
       ),
     );

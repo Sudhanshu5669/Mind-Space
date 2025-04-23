@@ -168,6 +168,7 @@ class _LoginPageState extends State<LoginPage> {
 
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
 import 'package:mind_space/Components/textField.dart';
 import 'package:http/http.dart' as http;
 import 'package:mind_space/services/secure_storage_service.dart';
@@ -213,6 +214,31 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
     super.dispose();
   }
 
+  void getuser(session) async {
+
+    var response = await http.get(
+          Uri.parse("http://192.168.227.240:3000/user"),
+          headers: {
+            'Cookie': 'session=${session}',
+            'Content-Type': 'application/json',
+          }
+          
+        );
+        print(session);
+    if (response.statusCode == 200) {
+          final responseData = jsonDecode(response.body);
+          
+          var box = await Hive.openBox('user');
+          List<String> user = box.get('userDetail', defaultValue: ["John Doe", "john.doe@example.com"]);
+          List <String> user1 = [responseData["data"]["name"], responseData["data"]["email"]];
+          user[0] = responseData["data"]["name"];
+          user[1] = responseData["data"]["email"];
+          box.put('userDetail', user1);
+        }
+
+
+  }
+
   void _submitForm() async {
     if (_formKey.currentState!.validate()) {
       setState(() {
@@ -236,6 +262,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
           print(responseData['session']);
 
           await _secureStorage.saveToken(responseData['session']);
+          getuser(responseData['session']);
           Navigator.pushReplacementNamed(context, '/home');
         } else {
           // Handle error
@@ -268,6 +295,8 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
         });
       }
     }
+
+    
   }
 
   @override

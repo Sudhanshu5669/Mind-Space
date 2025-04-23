@@ -68,16 +68,7 @@ class _HomeState extends State<Home> {
         ),
         backgroundColor: Colors.black,
         elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.search, color: Colors.white),
-            onPressed: () {},
-          ),
-          IconButton(
-            icon: const Icon(Icons.notifications_none_rounded, color: Colors.white),
-            onPressed: () {},
-          ),
-        ],
+        
       ),
 
       // Beautiful FAB with shadow and ripple effect
@@ -136,20 +127,14 @@ class _HomeState extends State<Home> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        "Past Entries",
+                        "Your Entries",
                         style: TextStyle(
                           color: Colors.grey.shade300,
                           fontSize: 18,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
-                      TextButton(
-                        onPressed: () {},
-                        child: const Text(
-                          "See All",
-                          style: TextStyle(color: Colors.orangeAccent),
-                        ),
-                      ),
+                      
                     ],
                   ),
                   const SizedBox(height: 10),
